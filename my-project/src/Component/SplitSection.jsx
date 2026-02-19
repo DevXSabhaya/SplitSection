@@ -7,6 +7,7 @@ const SplitSection = () => {
   const [isSplitComplete, setIsSplitComplete] = useState(false)
   const [allowNormalScroll, setAllowNormalScroll] = useState(false)
   const [isReversing, setIsReversing] = useState(false)
+  const [isReversingFromCard, setIsReversingFromCard] = useState(false)
   const virtualScrollRef = useRef(0)
   const sectionRef = useRef(null)
   const animationFrameRef = useRef(null)
@@ -14,6 +15,12 @@ const SplitSection = () => {
   const rafSupported = useRef(typeof requestAnimationFrame !== 'undefined')
 
   const handleWheel = useCallback((e) => {
+    // Allow normal scrolling when split is complete (Card handles its own scrolling)
+    // But prevent interference during reverse animation from Card
+    if (isSplitComplete && !isReversingFromCard) {
+      return
+    }
+
     // Allow normal scrolling only when fully reset AND scrolling up
     if (virtualScrollRef.current <= 0 && e.deltaY < 0) {
       return // Allow normal page scrolling when at start and scrolling up
@@ -86,16 +93,28 @@ const SplitSection = () => {
       // Fallback for browsers without requestAnimationFrame
       setTimeout(updateAnimation, 16) // ~60fps fallback
     }
-  }, [])
+  }, [isSplitComplete, isReversingFromCard])
 
   const handleTouchStart = useCallback((e) => {
-    if (isSplitComplete || allowNormalScroll) {
+    // Allow normal touch behavior when split is complete (Card handles its own scrolling)
+    // But prevent interference during reverse animation from Card
+    if (isSplitComplete && !isReversingFromCard) {
+      return
+    }
+
+    if (allowNormalScroll) {
       return
     }
     lastTouchY.current = e.touches[0].clientY
   }, [isSplitComplete, allowNormalScroll])
 
   const handleTouchMove = useCallback((e) => {
+    // Allow normal touch behavior when split is complete (Card handles its own scrolling)
+    // But prevent interference during reverse animation from Card
+    if (isSplitComplete && !isReversingFromCard) {
+      return
+    }
+
     // Always prevent default to control the animation experience
     e.preventDefault()
 
@@ -160,7 +179,7 @@ const SplitSection = () => {
     } else {
       setTimeout(updateAnimation, 16) // ~60fps fallback
     }
-  }, [])
+  }, [isSplitComplete, isReversingFromCard])
 
   const handleResize = useCallback(() => {
     // Reset animation if window is resized significantly during animation
@@ -168,7 +187,7 @@ const SplitSection = () => {
       virtualScrollRef.current = 0
       setSplitProgress(0)
     }
-  }, [isSplitComplete])
+  }, [isSplitComplete, isReversingFromCard])
 
   useEffect(() => {
     // Prevent scrollbars when first section is visible
@@ -195,6 +214,7 @@ const SplitSection = () => {
       }
     }
   }, [handleWheel, handleTouchStart, handleTouchMove, handleResize])
+
 
   // Panels use dynamic positioning and width for horizontal split animation
 
@@ -242,8 +262,7 @@ const SplitSection = () => {
         </div>
 
         {/* Center reveal area - fills the gap during vertical split */}
-        <div
-          className='absolute left-0 top-1/2 transform -translate-y-1/2 w-full bg-black transition-all duration-300 ease-out overflow-hidden'
+        <div className='absolute left-0 top-1/2 transform -translate-y-1/2 w-full bg-black transition-all duration-300 ease-out overflow-auto hide-scrollbar'
           style={{
             height: `${splitProgress * 100}%`, // Grows from center to fill the gap
             transform: 'translateY(-50%)', // Center the growing element
@@ -251,10 +270,55 @@ const SplitSection = () => {
         >
           {/* Optional: Add content that appears in the center during split */}
           {splitProgress > 0.3 && (
-            <Card />
-          )}
-        </div>
-      </section>
+            <Card
+              isSplitComplete={isSplitComplete}
+              onScrollToTop={() => {
+                // Trigger reverse animation when scrolling to top of Card
+                setIsReversing(true)
+              setIsReversingFromCard(true)
+              setIsSplitComplete(false)
+              setAllowNormalScroll(false)
+              document.body.style.overflow = 'hidden'
+              // Start reversing from current position using existing animation system
+              virtualScrollRef.current = splitThreshold * splitProgress
+
+              // Start the reverse animation using the existing wheel animation logic
+              const startReverseAnimation = () => {
+                const animateReverse = () => {
+                  // Gradually decrease virtual scroll to trigger reverse animation
+                  virtualScrollRef.current -= 20 // Adjust speed as needed
+
+                  // Use the same animation logic as wheel handler
+                  const splitThreshold = window.innerHeight * 0.8
+                  if (virtualScrollRef.current <= 0) {
+                    virtualScrollRef.current = 0
+                    setSplitProgress(0)
+                    setIsSplitComplete(false)
+                    setAllowNormalScroll(false)
+                    setIsReversing(false)
+                    setIsReversingFromCard(false)
+                    document.body.style.overflow = 'hidden'
+                    return
+                  }
+
+                  // Calculate progress with smooth easing (ease-out cubic)
+                  const rawProgress = virtualScrollRef.current / splitThreshold
+                  const progress = 1 - Math.pow(1 - rawProgress, 3) // Cubic ease-out
+                  setSplitProgress(progress)
+
+                  // Continue animation
+                  requestAnimationFrame(animateReverse)
+                }
+
+                requestAnimationFrame(animateReverse)
+              }
+
+              startReverseAnimation()
+            }}
+          />
+        )}
+      </div>
+    </section >
     </>
   )
 }

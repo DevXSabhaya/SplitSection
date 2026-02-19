@@ -1,13 +1,58 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Logo from './SVGS/Logo'
 
-const Card = () => {
+const Card = ({ isSplitComplete = false, onScrollToTop = () => {} }) => {
+  const scrollContainerRef = useRef(null)
+  const lastScrollTop = useRef(0)
+
+  const handleScroll = useCallback((e) => {
+    if (!isSplitComplete) return
+
+    const scrollTop = e.target.scrollTop
+    const isScrollingUp = scrollTop < lastScrollTop.current
+
+    // Trigger reverse animation when scrolling to the very top
+    if (scrollTop <= 0 && isScrollingUp) {
+      onScrollToTop()
+    }
+
+    lastScrollTop.current = scrollTop
+
+    // Prevent the scroll event from bubbling up to prevent interference with animation
+    e.stopPropagation()
+  }, [isSplitComplete, onScrollToTop])
+
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (container) {
+      // Reset scroll position when state changes
+      container.scrollTop = 0
+      lastScrollTop.current = 0
+
+      // Force reflow to ensure CSS changes take effect
+      container.offsetHeight
+    }
+  }, [isSplitComplete])
+
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true })
+      return () => {
+        container.removeEventListener('scroll', handleScroll)
+      }
+    }
+  }, [handleScroll])
 
   return (
+    <>
     <section
-      className="w-full bg-black min-h-screen"
-    >
-      <div className="card_container flex flex-col px-8 py-20">
+      ref={scrollContainerRef}
+      className="w-full bg-black hide-scrollbar"
+      style={{
+        height: isSplitComplete ? '100vh' : 'auto',
+        minHeight: '100vh',
+        overflowY: isSplitComplete ? 'auto' : 'visible'}}>
         <div className="card_content text-center max-w-4xl mx-auto">
           <h2 className='text-[80px] md:text-[100px] font-geist font-bold leading-none antialiased md:subpixel-antialiased uppercase text-white mb-6'>
             Your Vision
@@ -165,8 +210,9 @@ const Card = () => {
             </div>
           </div>
         </div>
-      </div>
-    </section>
+        </section>
+
+    </>
   )
 }
 

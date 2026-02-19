@@ -10,3 +10,7 @@
   font-style: normal;
   font-display: swap;
 }
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
