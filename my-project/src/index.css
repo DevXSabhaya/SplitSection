@@ -14,3 +14,66 @@
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+
+
+.Loader-bg {
+  z-index: 2000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+  font-family: 'Geist';
+}
+
+.Loader-bg p {
+  font-size: 50px;
+  /* font-weight: 700; */
+  font-family: 'Geist';
+  letter-spacing: 2px;
+  color: white;
+  text-align: center;
+}
+
+/* Loader Styles */
+#svg {
+  stroke-width: 3px;
+  fill-opacity: 0;
+  stroke-dashoffset: 4500;
+  animation: draw 8s ease;
+}
+
+.logoSvg svg {
+  width: 200px;
+  height: 200px;
+}
+
+.logoSvg path {
+  fill: none;
+  stroke: white;
+  stroke-width: 3;
+}
+
+@keyframes draw {
+  0% {
+    stroke-dashoffset: 4500;
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (max-width: 768px){
+  .Loader-bg p {
+    font-size: 20px;
+    font-weight: 700;
+  }
+}
