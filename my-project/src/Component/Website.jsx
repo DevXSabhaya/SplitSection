@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import Lenis from 'lenis'
 import Logo from './SVGS/Logo'
 
 const Website = ({ isSplitComplete = false, onScrollToTop = () => {} }) => {
   const scrollContainerRef = useRef(null)
   const lastScrollTop = useRef(0)
+  const lenisRef = useRef(null)
 
   const handleScroll = useCallback((e) => {
     if (!isSplitComplete) return
@@ -36,13 +38,43 @@ const Website = ({ isSplitComplete = false, onScrollToTop = () => {} }) => {
 
   useEffect(() => {
     const container = scrollContainerRef.current
-    if (container) {
+    if (container && isSplitComplete) {
+      // Initialize Lenis for this scroll container
+      lenisRef.current = new Lenis({
+        wrapper: container,
+        content: container,
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        direction: 'vertical',
+        gestureDirection: 'vertical',
+        smooth: true,
+        mouseMultiplier: 1,
+        smoothTouch: false,
+        touchMultiplier: 2,
+        infinite: false,
+      })
+
+      // Start the Lenis animation loop
+      const raf = (time) => {
+        if (lenisRef.current) {
+          lenisRef.current.raf(time)
+          requestAnimationFrame(raf)
+        }
+      }
+      requestAnimationFrame(raf)
+
+      // Add scroll listener for reverse animation trigger
       container.addEventListener('scroll', handleScroll, { passive: true })
+
       return () => {
+        if (lenisRef.current) {
+          lenisRef.current.destroy()
+          lenisRef.current = null
+        }
         container.removeEventListener('scroll', handleScroll)
       }
     }
-  }, [handleScroll])
+  }, [handleScroll, isSplitComplete])
 
   return (
     <>

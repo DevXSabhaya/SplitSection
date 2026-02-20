@@ -199,6 +199,18 @@ const SplitSection = () => {
     }
   }, [isSplitComplete, isReversingFromWebsite])
 
+  // Control body overflow based on split animation state
+  // Lenis is now handled by the Website component directly
+  useEffect(() => {
+    if (isSplitComplete && allowNormalScroll && !isReversingFromWebsite) {
+      // Allow body scrolling when website is active (Website component handles its own Lenis)
+      document.body.style.overflow = 'auto'
+    } else {
+      // Keep body scroll locked during animation
+      document.body.style.overflow = 'hidden'
+    }
+  }, [isSplitComplete, allowNormalScroll, isReversingFromWebsite])
+
   useEffect(() => {
     // Prevent scrollbars when first section is visible
     document.body.style.overflow = 'hidden'
