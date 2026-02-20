@@ -240,7 +240,7 @@ const SplitSection = () => {
       >
         {/* Top Panel */}
         <div
-          className='absolute left-0 w-full bg-[#eeebdc] flex items-end justify-center transition-all duration-300 ease-out will-change-transform'
+          className='absolute left-[-10%] w-full bg-[#eeebdc] flex items-end justify-center transition-all duration-300 ease-out will-change-transform'
           style={{
             top: `${splitProgress * -25}%`, // Move up from center
             height: `${50 - (splitProgress * 25)}%`, // Shrink height as it moves
@@ -249,7 +249,7 @@ const SplitSection = () => {
         >
           <div>
             <p className='text-[16px] font-geist leading-[0] uppercase mb-4'>Best in Class</p>
-            <h2 className='text-[80px] md:text-[100px] font-geist font-bold leading-none antialiased md:subpixel-antialiased uppercase mb-2'>Your Vision</h2>
+            <h2 className='text-[80px] md:text-[120px] font-geist font-bold leading-none antialiased md:subpixel-antialiased uppercase mb-2'>Your Vision</h2>
           </div>
         </div>
 
@@ -263,7 +263,7 @@ const SplitSection = () => {
           }}
         >
           <div>
-            <h2 className='text-[80px] md:text-[100px] font-geist font-bold leading-none antialiased md:subpixel-antialiased uppercase ms-80'>Our Expertise</h2>
+            <h2 className='text-[80px] md:text-[120px] font-geist font-bold leading-none antialiased md:subpixel-antialiased uppercase ms-[12rem]'>Our Expertise</h2>
             <div className="flex items-center justify-end gap-2 mt-4">
               <p className='text-[16px] font-geist leading-[5] uppercase'>Made in GlobeSoft Solutions</p>
               <Logo />

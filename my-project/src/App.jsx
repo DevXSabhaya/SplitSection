@@ -4,21 +4,30 @@ import LandingPage from './Pages/LandingPage'
 import Loader from './Component/Loader/Loader'
 function App() {
   const [loading, setLoading] = useState(true);
-  useEffect(() => {  
-    // Loader 2 second baad hide hoga
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 4000);
-  
+  const [fadeOutLoader, setFadeOutLoader] = useState(false);
+  const [showContent, setShowContent] = useState(false);
+
+  useEffect(() => {
+    // Start fade out animation 3.5 seconds in, then hide loader and show content
+    const fadeTimer = setTimeout(() => {
+      setFadeOutLoader(true);
+      // After fade out animation completes, hide loader and show content
+      setTimeout(() => {
+        setLoading(false);
+        setShowContent(true);
+      }, 500);
+    }, 3500);
+
     return () => {
-      clearTimeout(timer);
+      clearTimeout(fadeTimer);
     };
 
   }, []);
   return (
-    <>
-      {loading ? <Loader /> : <LandingPage />}
-    </>
+    <div className="app-container">
+      {loading && <Loader fadeOut={fadeOutLoader} />}
+      {showContent && <div className="app-content"><LandingPage /></div>}
+    </div>
   )
 }
 

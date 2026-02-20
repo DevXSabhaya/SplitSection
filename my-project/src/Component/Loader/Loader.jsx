@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
 const NAME_TEXT = 'GlobeSoft Solutions';
-const Loader = () => {
+const Loader = ({ fadeOut = false }) => {
     const svgRef = useRef(null);
     const NameRef = useRef(null);
 
@@ -38,7 +38,7 @@ const Loader = () => {
     
 
     return (
-        <div className="Loader-bg">
+        <div className={`Loader-bg ${fadeOut ? 'fade-out' : ''}`}>
             <div className="logoSvg">
                 <svg
                     id="svg"
