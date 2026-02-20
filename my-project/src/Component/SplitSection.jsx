@@ -14,6 +14,9 @@ const SplitSection = () => {
   const lastTouchY = useRef(0)
   const rafSupported = useRef(typeof requestAnimationFrame !== 'undefined')
 
+  // Consistent threshold value used across all animation logic
+  const splitThreshold = useRef(window.innerHeight * 0.8)
+
   const handleWheel = useCallback((e) => {
     // Allow normal scrolling when split is complete (Card handles its own scrolling)
     // But prevent interference during reverse animation from Card
@@ -44,8 +47,6 @@ const SplitSection = () => {
     // Detect reverse scrolling
     const isScrollingUp = virtualScrollRef.current < previousScroll
 
-    // Define split threshold (how much scroll needed to complete split)
-    const splitThreshold = window.innerHeight * 0.8
 
     const updateAnimation = () => {
       // Handle reverse animation (scrolling back up)
@@ -56,16 +57,17 @@ const SplitSection = () => {
         setIsSplitComplete(false)
         setAllowNormalScroll(false)
         setIsReversing(false)
+        setIsReversingFromCard(false)
 
-        // Allow body scrolling so Card can scroll internally
-        document.body.style.overflow = 'auto'
+        // Keep body scroll locked in initial state
+        document.body.style.overflow = 'hidden'
         return
       }
 
       // Handle forward animation (scrolling down)
-      if (virtualScrollRef.current >= splitThreshold) {
+      if (virtualScrollRef.current >= splitThreshold.current) {
         // Split is complete
-        virtualScrollRef.current = splitThreshold
+        virtualScrollRef.current = splitThreshold.current
         setSplitProgress(1)
         setIsSplitComplete(true)
         setAllowNormalScroll(true)
@@ -77,7 +79,7 @@ const SplitSection = () => {
       }
 
       // Calculate progress with smooth easing (ease-out cubic)
-      const rawProgress = virtualScrollRef.current / splitThreshold
+      const rawProgress = virtualScrollRef.current / splitThreshold.current
       const progress = 1 - Math.pow(1 - rawProgress, 3) // Cubic ease-out
       setSplitProgress(progress)
       setIsReversing(isScrollingUp)
@@ -93,7 +95,7 @@ const SplitSection = () => {
       // Fallback for browsers without requestAnimationFrame
       setTimeout(updateAnimation, 16) // ~60fps fallback
     }
-  }, [isSplitComplete, isReversingFromCard])
+  }, [isSplitComplete, isReversingFromCard, splitThreshold.current])
 
   const handleTouchStart = useCallback((e) => {
     // Allow normal touch behavior when split is complete (Card handles its own scrolling)
@@ -130,48 +132,52 @@ const SplitSection = () => {
     // Accumulate virtual scroll with gentler multiplier for smoother control
     virtualScrollRef.current += deltaY * 0.2
 
-    // Allow full range for smooth opening and closing animations
-    virtualScrollRef.current = Math.max(-200, Math.min(virtualScrollRef.current, window.innerHeight * 1.5))
+    // Allow negative values for reverse animation, clamp to prevent over-scrolling
+    virtualScrollRef.current = Math.max(-100, Math.min(virtualScrollRef.current, window.innerHeight * 1.2))
 
-    // Define split threshold - increased for longer, smoother animation
-    const splitThreshold = window.innerHeight * 1.2
+    // Use consistent split threshold
+    const touchSplitThreshold = window.innerHeight * 1.2
 
     const updateAnimation = () => {
-      // Handle fully closed state (scrolled back to top)
-      if (virtualScrollRef.current <= -100) {
+      // Handle reverse animation (scrolling back up)
+      if (virtualScrollRef.current <= 0) {
+        // Fully closed - reset to initial state
         virtualScrollRef.current = 0
         setSplitProgress(0)
         setIsSplitComplete(false)
         setAllowNormalScroll(false)
         setIsReversing(false)
+        setIsReversingFromCard(false)
+
+        // Keep body scroll locked in initial state
         document.body.style.overflow = 'hidden'
         return
       }
 
-      // Handle fully open state (split animation complete)
-      if (virtualScrollRef.current >= splitThreshold) {
-        virtualScrollRef.current = splitThreshold
+      // Handle forward animation (scrolling down)
+      if (virtualScrollRef.current >= splitThreshold.current) {
+        // Split is complete
+        virtualScrollRef.current = splitThreshold.current
         setSplitProgress(1)
         setIsSplitComplete(true)
         setAllowNormalScroll(true)
         setIsReversing(false)
+        setIsReversingFromCard(false)
+
+        // Allow body scrolling so Card can scroll internally
         document.body.style.overflow = 'auto'
         return
       }
 
-      // Calculate smooth progress with better easing curve
-      const rawProgress = Math.max(0, Math.min(1, virtualScrollRef.current / splitThreshold))
-      const progress = rawProgress < 0.5
-        ? 2 * rawProgress * rawProgress // Ease-in for first half (gentle start)
-        : 1 - Math.pow(-2 * rawProgress + 2, 2) / 2 // Ease-out for second half (smooth finish)
-
+      // Calculate progress with smooth easing (ease-out cubic)
+      const rawProgress = virtualScrollRef.current / splitThreshold.current
+      const progress = 1 - Math.pow(1 - rawProgress, 3) // Cubic ease-out
       setSplitProgress(progress)
-      setIsSplitComplete(false)
-      setAllowNormalScroll(false)
       setIsReversing(virtualScrollRef.current < 0)
 
       // Keep page locked during animation
       document.body.style.overflow = 'hidden'
+      setAllowNormalScroll(false)
     }
 
     if (rafSupported.current) {
@@ -179,9 +185,12 @@ const SplitSection = () => {
     } else {
       setTimeout(updateAnimation, 16) // ~60fps fallback
     }
-  }, [isSplitComplete, isReversingFromCard])
+  }, [isSplitComplete, isReversingFromCard, splitThreshold.current])
 
   const handleResize = useCallback(() => {
+    // Update threshold on resize
+    splitThreshold.current = window.innerHeight * 0.8
+
     // Reset animation if window is resized significantly during animation
     if (!isSplitComplete && virtualScrollRef.current > 0) {
       virtualScrollRef.current = 0
@@ -275,22 +284,26 @@ const SplitSection = () => {
               onScrollToTop={() => {
                 // Trigger reverse animation when scrolling to top of Card
                 setIsReversing(true)
-              setIsReversingFromCard(true)
-              setIsSplitComplete(false)
-              setAllowNormalScroll(false)
-              document.body.style.overflow = 'hidden'
-              // Start reversing from current position using existing animation system
-              virtualScrollRef.current = splitThreshold * splitProgress
+                setIsReversingFromCard(true)
+                setIsSplitComplete(false)
+                setAllowNormalScroll(false)
+                document.body.style.overflow = 'hidden'
 
-              // Start the reverse animation using the existing wheel animation logic
-              const startReverseAnimation = () => {
+                // Start reversing from current position
+                virtualScrollRef.current = splitThreshold.current * splitProgress
+
+                // Cancel any existing animation frame
+                if (animationFrameRef.current) {
+                  cancelAnimationFrame(animationFrameRef.current)
+                }
+
+                // Start smooth reverse animation
                 const animateReverse = () => {
-                  // Gradually decrease virtual scroll to trigger reverse animation
-                  virtualScrollRef.current -= 20 // Adjust speed as needed
+                  // Gradually decrease virtual scroll with consistent speed
+                  virtualScrollRef.current = Math.max(0, virtualScrollRef.current - 15)
 
-                  // Use the same animation logic as wheel handler
-                  const splitThreshold = window.innerHeight * 0.8
                   if (virtualScrollRef.current <= 0) {
+                    // Animation complete - reset all states
                     virtualScrollRef.current = 0
                     setSplitProgress(0)
                     setIsSplitComplete(false)
@@ -302,19 +315,16 @@ const SplitSection = () => {
                   }
 
                   // Calculate progress with smooth easing (ease-out cubic)
-                  const rawProgress = virtualScrollRef.current / splitThreshold
+                  const rawProgress = virtualScrollRef.current / splitThreshold.current
                   const progress = 1 - Math.pow(1 - rawProgress, 3) // Cubic ease-out
                   setSplitProgress(progress)
 
                   // Continue animation
-                  requestAnimationFrame(animateReverse)
+                  animationFrameRef.current = requestAnimationFrame(animateReverse)
                 }
 
-                requestAnimationFrame(animateReverse)
-              }
-
-              startReverseAnimation()
-            }}
+                animationFrameRef.current = requestAnimationFrame(animateReverse)
+              }}
           />
         )}
       </div>
