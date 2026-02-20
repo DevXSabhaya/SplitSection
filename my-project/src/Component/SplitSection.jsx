@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Logo from './SVGS/Logo'
-import Card from './Card'
+// import Website from './Website'
+import Website from './Website'
 
 const SplitSection = () => {
   const [splitProgress, setSplitProgress] = useState(0) // 0 = no split, 1 = fully split
   const [isSplitComplete, setIsSplitComplete] = useState(false)
   const [allowNormalScroll, setAllowNormalScroll] = useState(false)
   const [isReversing, setIsReversing] = useState(false)
-  const [isReversingFromCard, setIsReversingFromCard] = useState(false)
+  const [isReversingFromWebsite, setIsReversingFromWebsite] = useState(false)
   const virtualScrollRef = useRef(0)
   const sectionRef = useRef(null)
   const animationFrameRef = useRef(null)
@@ -18,9 +19,9 @@ const SplitSection = () => {
   const splitThreshold = useRef(window.innerHeight * 0.8)
 
   const handleWheel = useCallback((e) => {
-    // Allow normal scrolling when split is complete (Card handles its own scrolling)
-    // But prevent interference during reverse animation from Card
-    if (isSplitComplete && !isReversingFromCard) {
+    // Allow normal scrolling when split is complete (Website handles its own scrolling)
+    // But prevent interference during reverse animation from Website
+    if (isSplitComplete && !isReversingFromWebsite) {
       return
     }
 
@@ -57,7 +58,7 @@ const SplitSection = () => {
         setIsSplitComplete(false)
         setAllowNormalScroll(false)
         setIsReversing(false)
-        setIsReversingFromCard(false)
+        setIsReversingFromWebsite(false)
 
         // Keep body scroll locked in initial state
         document.body.style.overflow = 'hidden'
@@ -73,7 +74,7 @@ const SplitSection = () => {
         setAllowNormalScroll(true)
         setIsReversing(false)
 
-        // Allow body scrolling so Card can scroll internally
+        // Allow body scrolling so Website can scroll internally
         document.body.style.overflow = 'auto'
         return
       }
@@ -95,12 +96,12 @@ const SplitSection = () => {
       // Fallback for browsers without requestAnimationFrame
       setTimeout(updateAnimation, 16) // ~60fps fallback
     }
-  }, [isSplitComplete, isReversingFromCard, splitThreshold.current])
+  }, [isSplitComplete, isReversingFromWebsite, splitThreshold.current])
 
   const handleTouchStart = useCallback((e) => {
-    // Allow normal touch behavior when split is complete (Card handles its own scrolling)
-    // But prevent interference during reverse animation from Card
-    if (isSplitComplete && !isReversingFromCard) {
+    // Allow normal touch behavior when split is complete (Website handles its own scrolling)
+    // But prevent interference during reverse animation from Website
+    if (isSplitComplete && !isReversingFromWebsite) {
       return
     }
 
@@ -111,9 +112,9 @@ const SplitSection = () => {
   }, [isSplitComplete, allowNormalScroll])
 
   const handleTouchMove = useCallback((e) => {
-    // Allow normal touch behavior when split is complete (Card handles its own scrolling)
-    // But prevent interference during reverse animation from Card
-    if (isSplitComplete && !isReversingFromCard) {
+    // Allow normal touch behavior when split is complete (Website handles its own scrolling)
+    // But prevent interference during reverse animation from Website
+    if (isSplitComplete && !isReversingFromWebsite) {
       return
     }
 
@@ -147,7 +148,7 @@ const SplitSection = () => {
         setIsSplitComplete(false)
         setAllowNormalScroll(false)
         setIsReversing(false)
-        setIsReversingFromCard(false)
+        setIsReversingFromWebsite(false)
 
         // Keep body scroll locked in initial state
         document.body.style.overflow = 'hidden'
@@ -162,9 +163,9 @@ const SplitSection = () => {
         setIsSplitComplete(true)
         setAllowNormalScroll(true)
         setIsReversing(false)
-        setIsReversingFromCard(false)
+        setIsReversingFromWebsite(false)
 
-        // Allow body scrolling so Card can scroll internally
+        // Allow body scrolling so Website can scroll internally
         document.body.style.overflow = 'auto'
         return
       }
@@ -185,7 +186,7 @@ const SplitSection = () => {
     } else {
       setTimeout(updateAnimation, 16) // ~60fps fallback
     }
-  }, [isSplitComplete, isReversingFromCard, splitThreshold.current])
+  }, [isSplitComplete, isReversingFromWebsite, splitThreshold.current])
 
   const handleResize = useCallback(() => {
     // Update threshold on resize
@@ -196,7 +197,7 @@ const SplitSection = () => {
       virtualScrollRef.current = 0
       setSplitProgress(0)
     }
-  }, [isSplitComplete, isReversingFromCard])
+  }, [isSplitComplete, isReversingFromWebsite])
 
   useEffect(() => {
     // Prevent scrollbars when first section is visible
@@ -279,12 +280,12 @@ const SplitSection = () => {
         >
           {/* Optional: Add content that appears in the center during split */}
           {splitProgress > 0.3 && (
-            <Card
+            <Website
               isSplitComplete={isSplitComplete}
               onScrollToTop={() => {
-                // Trigger reverse animation when scrolling to top of Card
+                // Trigger reverse animation when scrolling to top of Website
                 setIsReversing(true)
-                setIsReversingFromCard(true)
+                setIsReversingFromWebsite(true)
                 setIsSplitComplete(false)
                 setAllowNormalScroll(false)
                 document.body.style.overflow = 'hidden'
@@ -309,7 +310,7 @@ const SplitSection = () => {
                     setIsSplitComplete(false)
                     setAllowNormalScroll(false)
                     setIsReversing(false)
-                    setIsReversingFromCard(false)
+                    setIsReversingFromWebsite(false)
                     document.body.style.overflow = 'hidden'
                     return
                   }

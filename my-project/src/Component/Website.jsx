@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Logo from './SVGS/Logo'
 
-const Card = ({ isSplitComplete = false, onScrollToTop = () => {} }) => {
+const Website = ({ isSplitComplete = false, onScrollToTop = () => {} }) => {
   const scrollContainerRef = useRef(null)
   const lastScrollTop = useRef(0)
 
@@ -124,8 +124,6 @@ const Card = ({ isSplitComplete = false, onScrollToTop = () => {} }) => {
               </div>
             </div>
           </div>
-
-          {/* Additional scrollable content */}
           <div className="space-y-12 py-20">
             <div className="text-center">
               <h3 className='text-[48px] font-geist font-bold uppercase text-white mb-8'>Our Services</h3>
@@ -216,4 +214,4 @@ const Card = ({ isSplitComplete = false, onScrollToTop = () => {} }) => {
   )
 }
 
-export default Card
+export default Website

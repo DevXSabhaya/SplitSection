@@ -1,7 +1,7 @@
 import React from 'react'
 import SplitSection from '../Component/SplitSection'
 
-const Home = () => {
+const LandingPage = () => {
   return (
     <div className="relative">
       <SplitSection />
@@ -9,4 +9,4 @@ const Home = () => {
   )
 }
 
-export default Home
+export default LandingPage
