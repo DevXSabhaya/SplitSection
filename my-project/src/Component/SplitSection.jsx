@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Logo from './SVGS/Logo'
 // import Website from './Website'
 import Website from './Website'
+import Header from './Header/Header'
 
 const SplitSection = () => {
   const [splitProgress, setSplitProgress] = useState(0) // 0 = no split, 1 = fully split
@@ -243,6 +244,7 @@ const SplitSection = () => {
   return (
     <>
       {/* Split Section Container */}
+      <Header />
       <section
         ref={sectionRef}
         className='h-screen w-full bg-[#eeebdc] relative overflow-hidden z-20'
