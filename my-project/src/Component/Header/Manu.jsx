@@ -17,11 +17,11 @@ const Manu = ({ isOpen, onClose }) => {
         {/* Close Button */}
         <button
             onClick={onClose}
-            className={`absolute top-6 right-6 md:top-8 md:right-[12rem] z-[1000] w-14 h-14 md:w-12 md:h-12 bg-white/15 hover:bg-white/30 active:bg-white/40 flex items-center justify-center text-white transition-all duration-500 ease-out transform backdrop-blur-sm border border-white/20 hover:border-white/40 hover:scale-110 active:scale-95 ${isOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-75 rotate-45'}`}
+            className={`absolute top-6 right-6 md:top-8 md:right-[12rem] z-[1000] w-14 h-14 md:w-12 md:h-12 bg-black flex items-center justify-center text-white transition-all duration-500 ease-out transform backdrop-blur-sm border border-white/20  active:scale-95 ${isOpen ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-75'}`}
             style={{ transitionDelay: isOpen ? '400ms' : '0ms' }}
             aria-label="Close menu"
         >
-            <FaTimes className="text-xl md:text-2xl" />
+            <FaTimes className="text-xl md:text-xl" />
         </button>
 
         <div className={`flex items-center justify-center h-full transition-all duration-1000 ease-out ${isOpen ? 'scale-100' : 'scale-95'}`}>

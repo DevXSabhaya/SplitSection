@@ -86,7 +86,7 @@ const Website = ({ isSplitComplete = false, onScrollToTop = () => {} }) => {
         minHeight: '100vh',
         overflowY: isSplitComplete ? 'auto' : 'visible'}}>
         <div className="card_content text-center max-w-4xl mx-auto">
-          <h2 className='text-[80px] md:text-[100px] font-geist font-bold leading-none antialiased md:subpixel-antialiased uppercase text-white mb-6'>
+          <h2 className='text-[80px] mt-[12rem] md:text-[100px] font-geist font-bold leading-none antialiased md:subpixel-antialiased uppercase text-white mb-6'>
             Your Vision
           </h2>
           <p className='text-[16px] font-geist leading-[5] uppercase text-white/80 mb-8'>
