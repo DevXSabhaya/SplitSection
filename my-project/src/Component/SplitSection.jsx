@@ -19,6 +19,43 @@ const SplitSection = () => {
   // Consistent threshold value used across all animation logic
   const splitThreshold = useRef(window.innerHeight * 0.8)
 
+  // Unified animation update function to ensure consistency
+  const updateAnimation = useCallback((isScrollingUp = false) => {
+    // Handle reverse animation (scrolling back up)
+    if (virtualScrollRef.current <= 0) {
+      // Fully closed - reset to initial state
+      virtualScrollRef.current = 0
+      setSplitProgress(0)
+      setIsSplitComplete(false)
+      setAllowNormalScroll(false)
+      setIsReversing(false)
+      // Only reset isReversingFromWebsite if we're not in a programmatic reverse animation
+      if (!isReversingFromWebsite) {
+        setIsReversingFromWebsite(false)
+      }
+      return
+    }
+
+    // Handle forward animation (scrolling down)
+    if (virtualScrollRef.current >= splitThreshold.current) {
+      // Split is complete
+      virtualScrollRef.current = splitThreshold.current
+      setSplitProgress(1)
+      setIsSplitComplete(true)
+      setAllowNormalScroll(true)
+      setIsReversing(false)
+      setIsReversingFromWebsite(false) // Clear any reverse flags when split completes
+      return
+    }
+
+    // Calculate progress with smooth easing (ease-out cubic)
+    const rawProgress = virtualScrollRef.current / splitThreshold.current
+    const progress = 1 - Math.pow(1 - rawProgress, 3) // Cubic ease-out
+    setSplitProgress(progress)
+    setIsReversing(isScrollingUp)
+    setAllowNormalScroll(false)
+  }, [splitThreshold.current, isReversingFromWebsite])
+
   const handleWheel = useCallback((e) => {
     // Allow normal scrolling when split is complete (Website handles its own scrolling)
     // But prevent interference during reverse animation from Website
@@ -49,55 +86,13 @@ const SplitSection = () => {
     // Detect reverse scrolling
     const isScrollingUp = virtualScrollRef.current < previousScroll
 
-
-    const updateAnimation = () => {
-      // Handle reverse animation (scrolling back up)
-      if (virtualScrollRef.current <= 0) {
-        // Fully closed - reset to initial state
-        virtualScrollRef.current = 0
-        setSplitProgress(0)
-        setIsSplitComplete(false)
-        setAllowNormalScroll(false)
-        setIsReversing(false)
-        setIsReversingFromWebsite(false)
-
-        // Keep body scroll locked in initial state
-        document.body.style.overflow = 'hidden'
-        return
-      }
-
-      // Handle forward animation (scrolling down)
-      if (virtualScrollRef.current >= splitThreshold.current) {
-        // Split is complete
-        virtualScrollRef.current = splitThreshold.current
-        setSplitProgress(1)
-        setIsSplitComplete(true)
-        setAllowNormalScroll(true)
-        setIsReversing(false)
-
-        // Allow body scrolling so Website can scroll internally
-        document.body.style.overflow = 'auto'
-        return
-      }
-
-      // Calculate progress with smooth easing (ease-out cubic)
-      const rawProgress = virtualScrollRef.current / splitThreshold.current
-      const progress = 1 - Math.pow(1 - rawProgress, 3) // Cubic ease-out
-      setSplitProgress(progress)
-      setIsReversing(isScrollingUp)
-
-      // Keep page locked during animation
-      document.body.style.overflow = 'hidden'
-      setAllowNormalScroll(false)
-    }
-
     if (rafSupported.current) {
-      animationFrameRef.current = requestAnimationFrame(updateAnimation)
+      animationFrameRef.current = requestAnimationFrame(() => updateAnimation(isScrollingUp))
     } else {
       // Fallback for browsers without requestAnimationFrame
-      setTimeout(updateAnimation, 16) // ~60fps fallback
+      setTimeout(() => updateAnimation(isScrollingUp), 16) // ~60fps fallback
     }
-  }, [isSplitComplete, isReversingFromWebsite, splitThreshold.current])
+  }, [isSplitComplete, isReversingFromWebsite, splitThreshold.current, updateAnimation])
 
   const handleTouchStart = useCallback((e) => {
     // Allow normal touch behavior when split is complete (Website handles its own scrolling)
@@ -132,62 +127,21 @@ const SplitSection = () => {
     }
 
     // Accumulate virtual scroll with gentler multiplier for smoother control
+    const previousScroll = virtualScrollRef.current
     virtualScrollRef.current += deltaY * 0.2
 
     // Allow negative values for reverse animation, clamp to prevent over-scrolling
     virtualScrollRef.current = Math.max(-100, Math.min(virtualScrollRef.current, window.innerHeight * 1.2))
 
-    // Use consistent split threshold
-    const touchSplitThreshold = window.innerHeight * 1.2
-
-    const updateAnimation = () => {
-      // Handle reverse animation (scrolling back up)
-      if (virtualScrollRef.current <= 0) {
-        // Fully closed - reset to initial state
-        virtualScrollRef.current = 0
-        setSplitProgress(0)
-        setIsSplitComplete(false)
-        setAllowNormalScroll(false)
-        setIsReversing(false)
-        setIsReversingFromWebsite(false)
-
-        // Keep body scroll locked in initial state
-        document.body.style.overflow = 'hidden'
-        return
-      }
-
-      // Handle forward animation (scrolling down)
-      if (virtualScrollRef.current >= splitThreshold.current) {
-        // Split is complete
-        virtualScrollRef.current = splitThreshold.current
-        setSplitProgress(1)
-        setIsSplitComplete(true)
-        setAllowNormalScroll(true)
-        setIsReversing(false)
-        setIsReversingFromWebsite(false)
-
-        // Allow body scrolling so Website can scroll internally
-        document.body.style.overflow = 'auto'
-        return
-      }
-
-      // Calculate progress with smooth easing (ease-out cubic)
-      const rawProgress = virtualScrollRef.current / splitThreshold.current
-      const progress = 1 - Math.pow(1 - rawProgress, 3) // Cubic ease-out
-      setSplitProgress(progress)
-      setIsReversing(virtualScrollRef.current < 0)
-
-      // Keep page locked during animation
-      document.body.style.overflow = 'hidden'
-      setAllowNormalScroll(false)
-    }
+    // Detect reverse scrolling
+    const isScrollingUp = virtualScrollRef.current < previousScroll
 
     if (rafSupported.current) {
-      animationFrameRef.current = requestAnimationFrame(updateAnimation)
+      animationFrameRef.current = requestAnimationFrame(() => updateAnimation(isScrollingUp))
     } else {
-      setTimeout(updateAnimation, 16) // ~60fps fallback
+      setTimeout(() => updateAnimation(isScrollingUp), 16) // ~60fps fallback
     }
-  }, [isSplitComplete, isReversingFromWebsite, splitThreshold.current])
+  }, [isSplitComplete, isReversingFromWebsite, splitThreshold.current, updateAnimation])
 
   const handleResize = useCallback(() => {
     // Update threshold on resize
@@ -311,35 +265,42 @@ const SplitSection = () => {
                 setAllowNormalScroll(false)
                 document.body.style.overflow = 'hidden'
 
-                // Start reversing from current position
-                virtualScrollRef.current = splitThreshold.current * splitProgress
-
                 // Cancel any existing animation frame
                 if (animationFrameRef.current) {
                   cancelAnimationFrame(animationFrameRef.current)
                 }
 
-                // Start smooth reverse animation
-                const animateReverse = () => {
-                  // Gradually decrease virtual scroll with consistent speed
-                  virtualScrollRef.current = Math.max(0, virtualScrollRef.current - 15)
+                // Start smooth reverse animation using easing
+                const startScroll = virtualScrollRef.current
+                const targetScroll = 0
+                const animationDuration = 800 // ms - adjust for desired speed
+                const startTime = Date.now()
 
-                  if (virtualScrollRef.current <= 0) {
-                    // Animation complete - reset all states
+                const animateReverse = () => {
+                  const elapsed = Date.now() - startTime
+                  const progress = Math.min(elapsed / animationDuration, 1)
+
+                  // Use ease-out cubic for consistent feel with forward animation
+                  const easedProgress = 1 - Math.pow(1 - progress, 3)
+
+                  // Interpolate from start to target
+                  virtualScrollRef.current = startScroll + (targetScroll - startScroll) * easedProgress
+
+                  if (progress >= 1) {
+                    // Animation complete - reset all states cleanly
                     virtualScrollRef.current = 0
                     setSplitProgress(0)
                     setIsSplitComplete(false)
                     setAllowNormalScroll(false)
                     setIsReversing(false)
                     setIsReversingFromWebsite(false)
-                    document.body.style.overflow = 'hidden'
                     return
                   }
 
-                  // Calculate progress with smooth easing (ease-out cubic)
+                  // Update progress during animation
                   const rawProgress = virtualScrollRef.current / splitThreshold.current
-                  const progress = 1 - Math.pow(1 - rawProgress, 3) // Cubic ease-out
-                  setSplitProgress(progress)
+                  const displayProgress = Math.max(0, 1 - Math.pow(1 - rawProgress, 3))
+                  setSplitProgress(displayProgress)
 
                   // Continue animation
                   animationFrameRef.current = requestAnimationFrame(animateReverse)
