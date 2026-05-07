@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Lenis from 'lenis'
 import Logo from './SVGS/Logo'
+import FirstDescription from './WebComponent/FirstDescription'
 
 const Website = ({ isSplitComplete = false, onScrollToTop = () => {} }) => {
   const scrollContainerRef = useRef(null)
@@ -85,7 +86,8 @@ const Website = ({ isSplitComplete = false, onScrollToTop = () => {} }) => {
         height: isSplitComplete ? '100vh' : 'auto',
         minHeight: '100vh',
         overflowY: isSplitComplete ? 'auto' : 'visible'}}>
-        <div className="card_content text-center max-w-4xl mx-auto">
+        <div>
+          <FirstDescription/>
           <h2 className='text-[80px] mt-[12rem] md:text-[100px] font-geist font-bold leading-none antialiased md:subpixel-antialiased uppercase text-white mb-6'>
             Your Vision
           </h2>
